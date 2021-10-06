@@ -22,6 +22,7 @@ int tamanho(char c1)
     
     if(!i)
         i++;
+    printf("tm = %d\n", i);
     return i;
 }
 
@@ -29,28 +30,63 @@ void utf_varint_aux(FILE *arq_saida, int aux, int tm)
 {
     
 
-    //int i;
+    int v0, v1, v2, v3;
     char grupo_7bits;
     union data temp;
     temp.i1 = aux;
-    //printf("aux = %X\n",temp.vetor[0]);
+    //printf("utf = %X\n",temp.vetor[0]);
+
+    switch (tm)
+    {
+    case 2:
+        v1 = ((temp.vetor[1] - 0xC0));
+        v1 <<= 6;
+        v0 = (temp.vetor[0] - 0x80);
+        temp.i1 =  v0 + v1;
+        break;
+    
+    case 3:
+        v2 = (temp.vetor[2] - 0xE0);
+        v2 <<= 12;
+        v1 = (temp.vetor[1] - 0x80);
+        v1 <<= 6;
+        v0 = (temp.vetor[0] - 0x80);
+        temp.i1 =  v0 + v1 + v2;
+        break;
+
+    case 4:
+        v3 = temp.vetor[3] - 0xF0;
+        v3 <<= 18;
+        v2 = temp.vetor[2] - 0x80;
+        v2 <<= 12;
+        v1 = temp.vetor[1] - 0x80;
+        v1 <<= 6;
+        v0 = (temp.vetor[0] - 0x80);
+        temp.i1 = v0 + v1 + v2 + v3;
+        break;
+
+    default:
+        break;
+    }
+
+    printf("valor int = %X\n", temp.i1);
 
     while (1)
     {
         grupo_7bits = temp.vetor[0];
         grupo_7bits &= 0x7f;
-        //printf("atual %hhx\n", grupo_7bits);
-        //printf("next %hhx\n", temp.i1 >> 7);
+        printf("atual %hhx\n", grupo_7bits);
+        printf("next %hhx\n", temp.i1 >> 7);
         if((temp.i1 >> 7) == 0)
         {
-            //printf("end %hhx\n", grupo_7bits);
+            printf("end %hhx\n", grupo_7bits);
             fputc(grupo_7bits, arq_saida);
             break;
         }
         else
         {
             grupo_7bits += 0x80;
-            //printf("cont %hhx\n", grupo_7bits);
+            printf("cont %hhx\n", grupo_7bits);
             fputc(grupo_7bits, arq_saida);
         }
         temp.i1 >>= 7;
@@ -75,7 +111,6 @@ int utf_varint(FILE *arq_entrada, FILE *arq_saida)
             break;
         //printf("%hhx\n", c1);
         tm = tamanho(c1);
-        //printf ("tm = %d\n", tm);
         aux += c1;
         i++;
         while (i < tm)
@@ -113,12 +148,12 @@ unsigned int varint_utf_aux(unsigned char aux[],int tm, FILE *arq_saida)
     printf("%hhx->", temp.vetor[3]);
     printf("\n");
 
-    printf("%d\n", tm);
+    printf("tm = %d\n", tm);
     
     
     if(temp.i1 < 0x80)
     {
-        //printf("Impresso: %hhx\n", temp.vetor[0]);
+        printf("Impresso: %hhx\n", temp.vetor[0]);
         fputc(temp.vetor[0], arq_saida);
     }
     else if(temp.i1 < 0x800)
@@ -128,8 +163,8 @@ unsigned int varint_utf_aux(unsigned char aux[],int tm, FILE *arq_saida)
         insercao.vetor[0] += (temp.vetor[0] & 0x3F);
         temp.i1 >>= 6;
         insercao.vetor[1] += temp.vetor[0];
-        //printf("Impresso: %hhx\n", temp.vetor[0]);
-        //printf("Impresso: %hhx\n", temp.vetor[1]);
+        printf("Impresso: %hhx\n", insercao.vetor[0]);
+        printf("Impresso: %hhx\n", insercao.vetor[1]);
         fputc(insercao.vetor[1], arq_saida);
         fputc(insercao.vetor[0], arq_saida);
         
@@ -145,9 +180,9 @@ unsigned int varint_utf_aux(unsigned char aux[],int tm, FILE *arq_saida)
         temp.i1 >>= 6;
         printf("hmm: %hhx\n", temp.vetor[0]);
         insercao.vetor[2] += temp.vetor[0];
-        //printf("Impresso: %hhx\n", temp.vetor[0]);
-        //printf("Impresso: %hhx\n", temp.vetor[1]);
-        //printf("Impresso: %hhx\n", temp.vetor[2]);
+        printf("Impresso: %hhx\n", insercao.vetor[2]);
+        printf("Impresso: %hhx\n", insercao.vetor[1]);
+        printf("Impresso: %hhx\n", insercao.vetor[0]);
         fputc(insercao.vetor[2], arq_saida);
         fputc(insercao.vetor[1], arq_saida);
         fputc(insercao.vetor[0], arq_saida);
@@ -168,28 +203,19 @@ unsigned int varint_utf_aux(unsigned char aux[],int tm, FILE *arq_saida)
         temp.i1 >>= 6;
         printf("hmm3: %hhx\n", temp.vetor[0]);
         insercao.vetor[3] += temp.vetor[0];
-        //printf("Impresso: %hhx\n", temp.vetor[0]);
-        //printf("Impresso: %hhx\n", temp.vetor[1]);
-        //printf("Impresso: %hhx\n", temp.vetor[2]);
-        //printf("Impresso: %hhx\n", temp.vetor[3]);
+        printf("Impresso: %hhx\n", insercao.vetor[3]);
+        printf("Impresso: %hhx\n", insercao.vetor[2]);
+        printf("Impresso: %hhx\n", insercao.vetor[1]);
+        printf("Impresso: %hhx\n", insercao.vetor[0]);
         fputc(insercao.vetor[3], arq_saida);
         fputc(insercao.vetor[2], arq_saida);
         fputc(insercao.vetor[1], arq_saida);
         fputc(insercao.vetor[0], arq_saida);
     }
     
-    /*
-    for(i = 3; i > -1; i--)
-    {
-        if(temp.vetor[i])
-        {
-            printf("Impresso: %hhx\n", temp.vetor[i]);
-            fputc(temp.vetor[i], arq_saida);
-        }
-    }
-    */
     
-    printf("utf: %X\n", insercao.i1);
+    
+    //printf("utf: %X\n", insercao.i1);
     return 0;
 }
 
@@ -205,7 +231,7 @@ int varint_utf(FILE *arq_entrada, FILE *arq_saida)
         c1 = fgetc(arq_entrada);
         if(feof(arq_entrada))
             break;
-        //fputc(c1, arq_saida);
+        
         
         aux[tm] = c1;
         tm++;
@@ -214,12 +240,13 @@ int varint_utf(FILE *arq_entrada, FILE *arq_saida)
             
             c1 = fgetc(arq_entrada);
             
-            //fputc(c1, arq_saida);
+            
             aux[tm] = c1;
             tm++;
         }
-        //printf("%d\n",tm);
+        printf("%d\n",tm);
         printf("valor varint: \n");
+        
         for(i = 0 ;i < tm; i++)
         {
             printf("%02hhx.", aux[i]);
