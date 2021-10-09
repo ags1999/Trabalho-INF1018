@@ -56,6 +56,7 @@ void utf_varint_aux(FILE *arq_saida,unsigned int palavra, int tm) // converte e 
         break;
 
     case 4:
+        byte23 = temp.vetor[3] - 0xF0;
         byte3 <<= 18;
         byte2 = temp.vetor[2] - 0x80;
         byte2 <<= 12;
